@@ -54,9 +54,9 @@ export async function GET(request: Request) {
         }, { status: 400 });
       }
 
-      // Select up to 10 random words for the quiz
+      // Select up to 40 random words for the quiz
       const shuffledWords = shuffle(allWords);
-      const quizWords = shuffledWords.slice(0, Math.min(10, allWords.length));
+      const quizWords = shuffledWords.slice(0, Math.min(40, allWords.length));
 
       // Build dynamic questions
       const questions = quizWords.map((item) => {

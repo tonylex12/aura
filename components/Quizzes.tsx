@@ -448,7 +448,7 @@ export default function Quizzes({ speakText, onUpdateStats }: QuizzesProps) {
               ) : (
                 <div>
                   <h3 className="text-2xl font-extrabold text-text-secondary">
-                    0 <span className="text-xs text-text-muted">/ 10</span>
+                    0 <span className="text-xs text-text-muted">/ 40</span>
                   </h3>
                   <p className="text-xs text-text-muted italic mt-1">
                     Aún sin registros. ¡Rómpelo ahora!
