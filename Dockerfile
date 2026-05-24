@@ -49,6 +49,9 @@ COPY --from=builder /app/package.json ./package.json
 # Copiar el script de arranque y asegurar permisos
 COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
 
+# Instalar prisma CLI localmente en producción para correr db push y db seed en el arranque
+RUN npm install prisma@6.19.3
+
 # Exponer el puerto de red de Next.js
 EXPOSE 3000
 
