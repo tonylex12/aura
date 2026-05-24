@@ -141,7 +141,7 @@ const vocabularyData = [
 
   // ================= TRAVEL (40) =================
   { word: "Check in", translation: "Registrarse en un hotel o aeropuerto", example: "We need to check in at the hotel before 3:00 PM.", category: "travel" },
-  { word: "Take off", translation: "Despegar (un avión)", example: "Our flight is scheduled to take off at 9:00 AM.", category: "travel" },
+  { word: "Touch down", translation: "Aterrizar (un avión)", example: "Our flight is scheduled to touch down at 9:00 AM.", category: "travel" },
   { word: "Catch up", translation: "Alcanzar a alguien / Ponerse al día", example: "Go ahead, I will catch up with you at the museum entrance.", category: "travel" },
   { word: "On a budget", translation: "Con presupuesto ajustado", example: "We traveled around Europe on a budget, staying in hostels.", category: "travel" },
   { word: "Book in advance", translation: "Reservar con anticipación", example: "You should book the train tickets in advance to get a discount.", category: "travel" },
@@ -284,7 +284,37 @@ const vocabularyData = [
   { word: "Scenario", translation: "Escenario / Situación hipotética", example: "The chat sandbox features several scenarios like ordering food or job interviews.", category: "core" },
   { word: "Significant", translation: "Significativo / Importante", example: "Daily habit builders lead to significant progress in vocabulary acquisition.", category: "core" },
   { word: "Sustainability", translation: "Sostenibilidad / Capacidad de mantenerse en el tiempo", example: "Clean architectural patterns ensure the long-term sustainability of the code.", category: "core" },
-  { word: "Valid", translation: "Válido / Con fundamento", example: "Make sure you provide a valid email address during user registration.", category: "core" }
+  { word: "Valid", translation: "Válido / Con fundamento", example: "Make sure you provide a valid email address during user registration.", category: "core" },
+
+  // ================= ADDITIONAL BUSINESS & TECH (10) =================
+  { word: "Authentication", translation: "Autenticación / Verificación de identidad", example: "The authentication system uses JWT tokens for security.", category: "business" },
+  { word: "Authorization", translation: "Autorización / Permisos de acceso", example: "He passed authentication but failed authorization to view the admin panel.", category: "business" },
+  { word: "Backend", translation: "Parte del servidor / Lógica detrás de escena", example: "Node.js and Prisma power the backend of our new application.", category: "business" },
+  { word: "Frontend", translation: "Interfaz de usuario / Lado del cliente", example: "We built the frontend using React and modern CSS features.", category: "business" },
+  { word: "Query", translation: "Consulta a una base de datos", example: "This Prisma query fetches all users who joined last week.", category: "business" },
+  { word: "Responsive", translation: "Responsivo / Adaptable a diferentes pantallas", example: "A good UI must be fully responsive on both mobile and desktop.", category: "business" },
+  { word: "State management", translation: "Gestión del estado de la aplicación", example: "React Context is a great tool for simple state management.", category: "business" },
+  { word: "Version control", translation: "Control de versiones", example: "Git is the most popular version control system among developers.", category: "business" },
+  { word: "Throughput", translation: "Tasa de transferencia / Rendimiento", example: "The server's throughput increased after we optimized the database queries.", category: "business" },
+  { word: "Latency", translation: "Latencia / Retraso en la respuesta", example: "We need to reduce network latency to make the app feel faster.", category: "business" },
+
+  // ================= ADDITIONAL CORE (16) =================
+  { word: "Accomplish", translation: "Lograr / Llevar a cabo", example: "We can accomplish a lot if we work together as a team.", category: "core" },
+  { word: "Algorithm", translation: "Algoritmo", example: "The search algorithm was optimized for better performance.", category: "core" },
+  { word: "Brief", translation: "Breve / Conciso", example: "Please keep your status update brief during the daily meeting.", category: "core" },
+  { word: "Cooperate", translation: "Cooperar / Trabajar en equipo", example: "The frontend and backend teams must cooperate closely.", category: "core" },
+  { word: "Crucial", translation: "Crucial / Fundamental", example: "Testing is a crucial part of the software development lifecycle.", category: "core" },
+  { word: "Demonstrate", translation: "Demostrar", example: "Let me demonstrate how the new speech recognition feature works.", category: "core" },
+  { word: "Enormous", translation: "Enorme / Muy grande", example: "The application handles an enormous amount of data every day.", category: "core" },
+  { word: "Familiar", translation: "Familiar / Conocido", example: "Are you familiar with the latest Next.js routing system?", category: "core" },
+  { word: "Gather", translation: "Reunir / Recopilar", example: "We need to gather more user feedback before the next update.", category: "core" },
+  { word: "Hesitate", translation: "Dudar / Vacilar", example: "Do not hesitate to ask for help if you are stuck on a bug.", category: "core" },
+  { word: "Initiate", translation: "Iniciar / Comenzar", example: "The server will initiate a backup process at midnight.", category: "core" },
+  { word: "Justify", translation: "Justificar", example: "Can you justify your decision to use SQLite instead of Postgres?", category: "core" },
+  { word: "Launch", translation: "Lanzar / Lanzamiento", example: "The official launch of the platform is scheduled for next Monday.", category: "core" },
+  { word: "Maximize", translation: "Maximizar", example: "We need to maximize our resources to finish the project on time.", category: "core" },
+  { word: "Negotiate", translation: "Negociar", example: "We had to negotiate the deadline with the client.", category: "core" },
+  { word: "Observe", translation: "Observar / Notar", example: "Did you observe any unusual behavior in the application logs?", category: "core" }
 ];
 
 const grammarData = [
@@ -489,9 +519,105 @@ const grammarData = [
       { en: "A new version of Aura will be released next week.", es: "Una nueva versión de Aura será lanzada la próxima semana.", explain: "Voz pasiva en futuro utilizando 'will be' seguido del participio pasado 'released'." }
     ]),
     order: 15
+  },
+
+  // ================= MODALS (2) =================
+  {
+    title: "16. Modal Verbs: Can, Could, Be able to",
+    category: "modals",
+    summary: "Se usan para expresar habilidad, posibilidad, permisos y solicitudes.",
+    formula: "Sujeto + Modal + Verbo en forma base",
+    content: "'Can' expresa habilidad en el presente o peticiones informales. 'Could' es el pasado de 'can' (habilidad pasada) o se usa para peticiones más formales y posibilidades hipotéticas. 'Be able to' no es un modal puro, pero se usa para expresar habilidad en todos los tiempos verbales (futuro, presente perfecto) donde 'can/could' no pueden conjugarse.",
+    examplesJson: JSON.stringify([
+      { en: "I can deploy this feature to production.", es: "Puedo desplegar esta característica a producción.", explain: "Uso de 'can' para expresar una habilidad en el presente." },
+      { en: "Could you please review my pull request?", es: "¿Podrías por favor revisar mi solicitud de extracción?", explain: "Uso de 'could' para hacer una petición formal y educada." },
+      { en: "We will be able to handle more traffic after the upgrade.", es: "Seremos capaces de manejar más tráfico después de la actualización.", explain: "Uso de 'be able to' en futuro ('will be able to') ya que 'can' no tiene futuro." }
+    ]),
+    order: 16
+  },
+  {
+    title: "17. Modal Verbs: Must, Have to, Should",
+    category: "modals",
+    summary: "Expresan obligaciones, necesidades y consejos o recomendaciones.",
+    formula: "Sujeto + Modal + Verbo en forma base",
+    content: "'Must' expresa una obligación fuerte (a menudo impuesta por el hablante) o deducciones lógicas. 'Have to' expresa obligación externa (reglas, leyes). La forma negativa 'mustn\\'t' significa prohibición, mientras que 'don\\'t have to' significa falta de obligación (no es necesario). 'Should' se utiliza para dar consejos, recomendaciones u opiniones.",
+    examplesJson: JSON.stringify([
+      { en: "You must never hardcode passwords in the repository.", es: "Nunca debes escribir contraseñas en duro en el repositorio.", explain: "Uso de 'must' para expresar una obligación muy fuerte o regla irrompible." },
+      { en: "We have to use a VPN to access the internal database.", es: "Tenemos que usar una VPN para acceder a la base de datos interna.", explain: "Uso de 'have to' para una obligación externa (regla de la empresa)." },
+      { en: "You should add more comments to this complex function.", es: "Deberías añadir más comentarios a esta función compleja.", explain: "Uso de 'should' para dar un consejo o sugerencia de buenas prácticas." }
+    ]),
+    order: 17
+  },
+
+  // ================= PREPOSITIONS (2) =================
+  {
+    title: "18. Prepositions of Time: In, On, At",
+    category: "prepositions",
+    summary: "Reglas fundamentales para el uso de in, on y at cuando hablamos de fechas y horarios.",
+    formula: "In (meses/años/siglos) | On (días/fechas específicas) | At (horas exactas)",
+    content: "Utilizamos 'In' para períodos largos e inespecíficos (meses, años, estaciones, siglos: in 2024, in summer, in October). Utilizamos 'On' para días y fechas específicas (on Monday, on May 5th, on New Year's Day). Utilizamos 'At' para tiempos muy específicos o exactos y festividades completas (at 5:00 PM, at noon, at midnight, at Christmas).",
+    examplesJson: JSON.stringify([
+      { en: "The server maintenance is scheduled at 3:00 AM.", es: "El mantenimiento del servidor está programado a las 3:00 AM.", explain: "Uso de 'at' para una hora específica." },
+      { en: "We will launch the new application on Friday.", es: "Lanzaremos la nueva aplicación el viernes.", explain: "Uso de 'on' para días de la semana." },
+      { en: "Next.js became very popular in 2022.", es: "Next.js se volvió muy popular en 2022.", explain: "Uso de 'in' para años y períodos más largos." }
+    ]),
+    order: 18
+  },
+  {
+    title: "19. Prepositions of Place: In, On, At",
+    category: "prepositions",
+    summary: "Reglas fundamentales para expresar ubicación.",
+    formula: "In (dentro de un espacio/volumen) | On (sobre una superficie) | At (punto específico/lugar)",
+    content: "Utilizamos 'In' cuando algo está contenido dentro de límites o en espacios tridimensionales, ciudades o países (in the box, in London, in a file). Usamos 'On' para superficies (on the table, on the screen, on the wall). Utilizamos 'At' para puntos exactos o lugares específicos con una función (at the door, at the office, at the server room).",
+    examplesJson: JSON.stringify([
+      { en: "The logs are saved in the project directory.", es: "Los registros se guardan en el directorio del proyecto.", explain: "Uso de 'in' para algo contenido dentro de una carpeta o directorio." },
+      { en: "You can see the error message on the screen.", es: "Puedes ver el mensaje de error en la pantalla.", explain: "Uso de 'on' para algo ubicado en una superficie plana." },
+      { en: "I left my laptop at the office.", es: "Dejé mi portátil en la oficina.", explain: "Uso de 'at' para referirse a un lugar específico o punto físico." }
+    ]),
+    order: 19
+  },
+
+  // ================= ADVANCED RULES (3) =================
+  {
+    title: "20. Gerunds vs. Infinitives",
+    category: "rules",
+    summary: "Aprende cuándo usar un verbo terminado en -ing y cuándo usar 'to' + verbo.",
+    formula: "Verbo + -ing (Gerund) | Verbo + to + base (Infinitive)",
+    content: "Algunos verbos en inglés deben ir seguidos por un gerundio (-ing) y otros por un infinitivo (to + verbo). Los gerundios se usan después de verbos de preferencia (enjoy, avoid, mind) y preposiciones. Los infinitivos se usan después de verbos que indican intención o decisión (want, decide, hope, promise). Además, el gerundio se utiliza cuando el verbo funciona como el sujeto de la oración.",
+    examplesJson: JSON.stringify([
+      { en: "I enjoy writing clean and maintainable code.", es: "Disfruto escribiendo código limpio y mantenible.", explain: "El verbo 'enjoy' siempre requiere que el siguiente verbo sea un gerundio ('writing')." },
+      { en: "We decided to migrate the database to PostgreSQL.", es: "Decidimos migrar la base de datos a PostgreSQL.", explain: "El verbo 'decide' requiere un infinitivo ('to migrate')." },
+      { en: "Refactoring legacy code is always a challenge.", es: "Refactorizar código heredado siempre es un desafío.", explain: "El verbo 'refactoring' (gerundio) actúa como el sujeto de toda la oración." }
+    ]),
+    order: 20
+  },
+  {
+    title: "21. Present Perfect Continuous",
+    category: "tenses",
+    summary: "Se utiliza para enfatizar la duración de una acción que empezó en el pasado y continúa hasta el presente.",
+    formula: "Sujeto + have/has been + Verbo-ING",
+    content: "El Present Perfect Continuous se enfoca en el proceso o duración prolongada de una acción que aún no ha terminado, o que acaba de terminar y tiene un efecto visible. Suele ir acompañado de 'for' (para periodos de tiempo) o 'since' (para un punto de inicio).",
+    examplesJson: JSON.stringify([
+      { en: "I have been trying to fix this bug for three hours.", es: "He estado intentando arreglar este error durante tres horas.", explain: "Enfatiza la duración ('for three hours') de una acción en progreso." },
+      { en: "She has been learning React since last year.", es: "Ella ha estado aprendiendo React desde el año pasado.", explain: "Indica una acción que empezó en el pasado ('since last year') y continúa." },
+      { en: "Why is the CPU so hot? Have you been training the AI?", es: "¿Por qué está tan caliente la CPU? ¿Has estado entrenando a la IA?", explain: "Pregunta sobre una acción que acaba de terminar pero deja evidencia (CPU caliente)." }
+    ]),
+    order: 21
+  },
+  {
+    title: "22. Reported Speech",
+    category: "rules",
+    summary: "Se usa para comunicar lo que otra persona dijo sin usar citas directas, generalmente cambiando el tiempo verbal al pasado.",
+    formula: "Discurso directo (Presente) -> Reported Speech (Pasado)",
+    content: "Al usar el Reported Speech, se cuenta lo que alguien dijo de forma indirecta. Por lo general, damos 'un paso atrás' en el tiempo verbal. Si la persona habló en presente simple, el discurso indirecto irá en pasado simple. El present continuous cambia a past continuous, y will cambia a would.",
+    examplesJson: JSON.stringify([
+      { en: "Direct: 'I need more RAM'. Reported: He said that he needed more RAM.", es: "Directo: 'Necesito más RAM'. Indirecto: Él dijo que necesitaba más RAM.", explain: "El presente simple ('need') cambia a pasado simple ('needed')." },
+      { en: "Direct: 'We are deploying'. Reported: They told me they were deploying.", es: "Directo: 'Estamos desplegando'. Indirecto: Me dijeron que estaban desplegando.", explain: "El present continuous ('are deploying') cambia a past continuous ('were deploying')." },
+      { en: "She said she would review the code later.", es: "Ella dijo que revisaría el código más tarde.", explain: "El futuro con 'will' cambia a 'would' en discurso indirecto." }
+    ]),
+    order: 22
   }
 ];
-
 async function main() {
   console.log("Iniciando semillero de Aura...");
   
