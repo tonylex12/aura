@@ -7,7 +7,7 @@ interface HeaderProps {
 
 export default function Header({ userName, apiConfigured }: HeaderProps) {
   return (
-    <header className="h-20 flex justify-between items-center mb-6">
+    <header className="h-20 flex justify-between items-center mb-6 pl-14 lg:pl-0">
       <div className="flex flex-col">
         <p className="text-[0.75rem] tracking-[0.15em] text-text-muted font-bold">
           LET'S IMPROVE TODAY

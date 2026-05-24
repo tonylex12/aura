@@ -24,22 +24,30 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const result = await signIn.create({
+      // 1. Iniciar la sesión únicamente con el correo (identificador)
+      let result = await signIn.create({
         identifier: email,
-        password,
       });
 
+      // 2. Si Clerk solicita el primer factor (contraseña), enviarla de manera explícita
+      if (result.status === "needs_first_factor") {
+        result = await signIn.attemptFirstFactor({
+          strategy: "password",
+          password,
+        });
+      }
+
+      // 3. Confirmar que el flujo se haya completado
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         toast.success("¡Bienvenido a Aura!");
         router.push("/dashboard");
       } else {
         console.warn("Flujo de Clerk incompleto:", result);
-        setError("Falta completar un paso de verificación adicional.");
+        setError(`El flujo no se pudo completar. Estado de Clerk: ${result.status}`);
       }
     } catch (err: any) {
       console.error("Falla al iniciar sesión en Clerk:", err);
-      // Capture Clerk API detailed error or fallback
       const errorMsg = err.errors?.[0]?.message || "Credenciales inválidas. Por favor intenta de nuevo.";
       setError(errorMsg);
       toast.error(errorMsg);

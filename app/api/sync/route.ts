@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    // 1. Obtener los detalles del usuario desde el directorio seguro de Clerk en el servidor
+    // 1. Obtener los detalles del usuario desde el directorio seguro de Clerk
     const client = await clerkClient();
     const clerkUser = await client.users.getUser(userId);
     const email = clerkUser.emailAddresses[0]?.emailAddress;
@@ -25,28 +25,39 @@ export async function GET() {
     // El correo tonylex12@gmail.com siempre será ADMIN
     const targetRole = email === "tonylex12@gmail.com" ? "ADMIN" : "USER";
 
-    // 2. Verificar si existe un registro pre-sembrado (placeholder) con ese correo
-    const existingPlaceholder = await prisma.user.findUnique({
+    // 2. Buscar si existe un registro por correo electrónico
+    const existingUserByEmail = await prisma.user.findUnique({
       where: { email },
     });
 
     let dbUser;
-    if (existingPlaceholder && existingPlaceholder.id === "admin-clerk-placeholder-id") {
-      // Sincronizar el ID temporal de semilla por el Clerk userId definitivo
-      dbUser = await prisma.user.update({
-        where: { email },
-        data: { 
-          id: userId,
-          role: "ADMIN" // Asegurar privilegios
-        },
-      });
-      console.log(`[Lazy-Sync] Admin pre-sembrado emparejado exitosamente para: ${email}`);
+
+    if (existingUserByEmail) {
+      if (existingUserByEmail.id !== userId) {
+        // Si el ID en base de datos es distinto al ID de la sesión actual de Clerk:
+        // (Esto cubre tanto al placeholder del seed como a Clerk IDs antiguos de previas pruebas en dev)
+        // Eliminamos el registro anterior en cascada para evitar colisiones de clave única de correo
+        await prisma.user.delete({
+          where: { email },
+        });
+
+        // Creamos el nuevo registro con el Clerk userId definitivo y el rol correspondiente
+        dbUser = await prisma.user.create({
+          data: {
+            id: userId,
+            email,
+            role: targetRole,
+          },
+        });
+        console.log(`[Sync] Usuario emparejado y re-creado con éxito para el correo: ${email}`);
+      } else {
+        // Si el ID coincide perfectamente, no hay nada que cambiar, retornamos el existente
+        dbUser = existingUserByEmail;
+      }
     } else {
-      // Upsert estándar: Crea el perfil de base de datos si no existe, o actualiza si cambió
-      dbUser = await prisma.user.upsert({
-        where: { id: userId },
-        update: { email },
-        create: {
+      // 3. Si no existe ningún usuario con ese correo electrónico, crearlo desde cero
+      dbUser = await prisma.user.create({
+        data: {
           id: userId,
           email,
           role: targetRole,
