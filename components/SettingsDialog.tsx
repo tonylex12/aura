@@ -1,34 +1,29 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 interface SettingsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  userName: string;
-  onSave: (name: string, voiceName: string, rate: number) => void;
-  ttsRate: number;
-  ttsVoice: SpeechSynthesisVoice | null;
 }
 
-export default function SettingsDialog({
-  isOpen,
-  onClose,
-  userName,
-  onSave,
-  ttsRate,
-  ttsVoice,
-}: SettingsDialogProps) {
-  const [nameInput, setNameInput] = useState(userName);
-  const [rateInput, setRateInput] = useState(ttsRate);
-  const [selectedVoiceName, setSelectedVoiceName] = useState(ttsVoice?.name || "");
+export default function SettingsDialog({ isOpen, onClose }: SettingsDialogProps) {
+  const { user, isLoaded } = useUser();
+  const [nameInput, setNameInput] = useState("");
+  const [rateInput, setRateInput] = useState(0.9);
+  const [selectedVoiceName, setSelectedVoiceName] = useState("");
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [saving, setSaving] = useState(false);
 
-  // Load Speech Synthesis voices client-side safely
+  // 1. Fetch system voices client-side
   useEffect(() => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       const loadVoices = () => {
@@ -40,14 +35,6 @@ export default function SettingsDialog({
         const sorted = [...engVoices, ...otherVoices];
         
         setAvailableVoices(sorted);
-
-        // Sync active selection
-        if (ttsVoice) {
-          setSelectedVoiceName(ttsVoice.name);
-        } else if (sorted.length > 0) {
-          const pref = sorted.find(v => v.name.includes("Google US English") || v.lang === "en-US") || sorted[0];
-          setSelectedVoiceName(pref.name);
-        }
       };
 
       loadVoices();
@@ -55,32 +42,65 @@ export default function SettingsDialog({
         window.speechSynthesis.onvoiceschanged = loadVoices;
       }
     }
-  }, [ttsVoice, isOpen]);
+  }, []);
 
-  // Sync inputs on open trigger
+  // 2. Load preferences on Dialog Open
   useEffect(() => {
     if (isOpen) {
-      setNameInput(userName);
-      setRateInput(ttsRate);
-      if (ttsVoice) {
-        setSelectedVoiceName(ttsVoice.name);
+      // Load user's Clerk first name
+      if (user) {
+        setNameInput(user.firstName || "");
+      }
+
+      // Load TTS preferences from localStorage
+      const savedRate = localStorage.getItem("aura_tts_rate");
+      const savedVoice = localStorage.getItem("aura_tts_voice");
+
+      if (savedRate) {
+        setRateInput(parseFloat(savedRate));
+      } else {
+        setRateInput(0.9);
+      }
+
+      if (savedVoice) {
+        setSelectedVoiceName(savedVoice);
+      } else if (availableVoices.length > 0) {
+        const pref = availableVoices.find(v => v.name.includes("Google US English") || v.lang === "en-US") || availableVoices[0];
+        setSelectedVoiceName(pref.name);
       }
     }
-  }, [isOpen, userName, ttsRate, ttsVoice]);
+  }, [isOpen, user, availableVoices]);
 
-  const handleSave = () => {
-    onSave(nameInput.trim() || "Learner", selectedVoiceName, rateInput);
-    onClose();
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      // 1. Save name to Clerk
+      if (user && nameInput.trim() !== "") {
+        await user.update({
+          firstName: nameInput.trim(),
+        });
+      }
+
+      // 2. Save TTS configs to LocalStorage
+      localStorage.setItem("aura_tts_rate", rateInput.toString());
+      localStorage.setItem("aura_tts_voice", selectedVoiceName);
+
+      toast.success("¡Configuración guardada exitosamente!");
+      onClose();
+    } catch (err: any) {
+      console.error("Error al guardar la configuración:", err);
+      toast.error("Ocurrió un error al actualizar tu perfil.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      {/* Set showCloseButton={false} because Radix already includes it or we handle closing gracefully */}
       <DialogContent 
-        className="max-w-[500px] bg-bg-secondary border-panel-border text-text-primary p-0 rounded-2xl overflow-hidden glass-panel border shadow-2xl"
+        className="max-w-[90%] md:max-w-[500px] bg-bg-secondary border-panel-border text-text-primary p-0 rounded-2xl overflow-hidden glass-panel border shadow-2xl"
         showCloseButton={true}
       >
-        
         {/* Dialog Header */}
         <div className="flex justify-between items-center p-5 px-6 border-b border-white/5">
           <DialogTitle className="text-lg font-bold flex items-center gap-2 font-display">
@@ -92,7 +112,7 @@ export default function SettingsDialog({
         </div>
 
         {/* Dialog Body */}
-        <div className="p-6 overflow-y-auto flex flex-col gap-6">
+        <div className="p-6 overflow-y-auto flex flex-col gap-6 max-h-[70vh]">
           {/* Profile Config */}
           <div className="flex flex-col gap-3">
             <h4 className="text-sm font-bold text-text-primary flex items-center gap-2">
@@ -107,8 +127,9 @@ export default function SettingsDialog({
                 id="input-user-name"
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
-                placeholder="Escribe tu nombre..."
-                className="bg-white/3 border border-white/6 rounded-xl p-3 px-4 text-text-primary text-sm outline-none transition-colors focus:bg-white/5 focus:border-primary-color"
+                placeholder={isLoaded && user ? "Escribe tu nombre..." : "Cargando usuario..."}
+                disabled={!isLoaded || saving}
+                className="bg-white/3 border border-white/6 rounded-xl p-3 px-4 text-text-primary text-sm outline-none transition-colors focus:bg-white/5 focus:border-primary-color disabled:opacity-50"
               />
             </div>
           </div>
@@ -127,12 +148,13 @@ export default function SettingsDialog({
                 id="select-tts-voice"
                 value={selectedVoiceName}
                 onChange={(e) => setSelectedVoiceName(e.target.value)}
-                className="bg-white/3 border border-white/6 text-text-primary p-3 px-4 rounded-xl text-sm outline-none cursor-pointer hover:bg-white/5 transition-colors"
+                disabled={saving}
+                className="bg-bg-secondary border border-white/6 text-text-primary p-3 px-4 rounded-xl text-sm outline-none cursor-pointer hover:bg-white/5 transition-colors max-w-full"
               >
                 {availableVoices.length > 0 ? (
                   availableVoices.map((voice) => (
                     <option key={voice.name} value={voice.name} className="bg-bg-secondary text-text-primary text-xs">
-                      {voice.name} ({voice.lang}){voice.default ? " [Predeterminada]" : ""}
+                      {voice.name} ({voice.lang})
                     </option>
                   ))
                 ) : (
@@ -156,7 +178,8 @@ export default function SettingsDialog({
                   step="0.1"
                   value={rateInput}
                   onChange={(e) => setRateInput(parseFloat(e.target.value))}
-                  className="grow accent-primary-color h-1.5 bg-white/10 rounded-full cursor-pointer outline-none"
+                  disabled={saving}
+                  className="grow accent-primary-color h-1.5 bg-white/10 rounded-full cursor-pointer outline-none disabled:opacity-50"
                 />
                 <span className="text-sm font-semibold text-text-primary w-10 text-right">
                   {rateInput}x
@@ -170,12 +193,12 @@ export default function SettingsDialog({
         <div className="p-4 px-6 border-t border-white/5 flex justify-end">
           <button
             onClick={handleSave}
-            className="flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-color text-white font-bold rounded-xl cursor-pointer hover:bg-primary-color-hover hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all duration-300"
+            disabled={saving || !isLoaded}
+            className="flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-color text-white font-bold rounded-xl cursor-pointer hover:bg-primary-color-hover hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all duration-300 disabled:opacity-50"
           >
-            Guardar Configuración
+            {saving ? "Guardando..." : "Guardar Configuración"}
           </button>
         </div>
-
       </DialogContent>
     </Dialog>
   );

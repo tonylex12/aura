@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 
 // Helper to shuffle array in-place
@@ -14,19 +15,26 @@ function shuffle<T>(array: T[]): T[] {
 // GET /api/quizzes?action=generate|records&category=xxx
 export async function GET(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const action = searchParams.get("action") || "records";
     const category = searchParams.get("category") || "all";
 
     if (action === "records") {
-      // Fetch historical quiz attempts
+      // Fetch historical quiz attempts scoped to active user
       const records = await prisma.quizRecord.findMany({
+        where: { userId },
         orderBy: { createdAt: "desc" },
         take: 30,
       });
 
-      // Calculate overall best score (highest ratio)
+      // Calculate overall best score (highest ratio) scoped to active user
       const best = await prisma.quizRecord.findFirst({
+        where: { userId },
         orderBy: [
           { score: "desc" },
           { createdAt: "desc" }
@@ -97,6 +105,11 @@ export async function GET(request: Request) {
 // POST /api/quizzes
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { score, total, category } = body;
 
@@ -106,6 +119,7 @@ export async function POST(request: Request) {
 
     const newRecord = await prisma.quizRecord.create({
       data: {
+        userId, // Bind to active user
         score: parseInt(score, 10),
         total: parseInt(total, 10),
         category: category || "all",

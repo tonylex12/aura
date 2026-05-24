@@ -621,6 +621,16 @@ const grammarData = [
 async function main() {
   console.log("Iniciando semillero de Aura...");
   
+  // 0. Limpieza en orden relacional (para evitar fallas de claves foráneas en PostgreSQL)
+  console.log("Limpiando tablas de progreso y maestría de usuario...");
+  await prisma.vocabularyMastery.deleteMany({});
+  await prisma.grammarProgress.deleteMany({});
+  await prisma.chatMessage.deleteMany({});
+  await prisma.quizRecord.deleteMany({});
+  
+  console.log("Limpiando tabla de usuarios...");
+  await prisma.user.deleteMany({});
+  
   // 1. Sembrado de Vocabulario
   console.log("Limpiando tabla de vocabulario...");
   await prisma.vocabulary.deleteMany({});
@@ -656,6 +666,19 @@ async function main() {
     }
   }
   console.log(`¡Semillero de gramática completado! Se han insertado con éxito ${grammarCount} lecciones.`);
+
+  // 3. Sembrado de Usuario Administrador Pre-configurado
+  console.log("Creando usuario administrador predeterminado...");
+  await prisma.user.upsert({
+    where: { email: "tonylex12@gmail.com" },
+    update: {},
+    create: {
+      id: "admin-clerk-placeholder-id",
+      email: "tonylex12@gmail.com",
+      role: "ADMIN"
+    }
+  });
+  console.log("¡Usuario administrador sembrado con éxito!");
 }
 
 main()

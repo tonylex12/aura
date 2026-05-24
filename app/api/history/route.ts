@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 
 // GET /api/history?scenario=xxx
 export async function GET(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const scenario = searchParams.get("scenario");
 
@@ -12,9 +18,12 @@ export async function GET(request: Request) {
     }
 
     const messages = await prisma.chatMessage.findMany({
-      where: { scenario },
+      where: { 
+        scenario,
+        userId, // Scope to active user
+      },
       orderBy: { createdAt: "asc" },
-      take: 50, // Keep it compact to save load time and context window
+      take: 50,
     });
 
     return NextResponse.json(messages);
@@ -27,6 +36,11 @@ export async function GET(request: Request) {
 // POST /api/history
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { sender, text, translation, isVoice, scenario } = body;
 
@@ -36,6 +50,7 @@ export async function POST(request: Request) {
 
     const newMessage = await prisma.chatMessage.create({
       data: {
+        userId, // Bind to active user
         sender,
         text,
         translation,
@@ -54,6 +69,11 @@ export async function POST(request: Request) {
 // DELETE /api/history?scenario=xxx
 export async function DELETE(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const scenario = searchParams.get("scenario");
 
@@ -62,7 +82,10 @@ export async function DELETE(request: Request) {
     }
 
     await prisma.chatMessage.deleteMany({
-      where: { scenario },
+      where: { 
+        scenario,
+        userId, // Scope to active user
+      },
     });
 
     return NextResponse.json({ success: true });

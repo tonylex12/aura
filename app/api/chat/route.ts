@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(request: Request) {
   try {
+    // Enforce Clerk authentication
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
     const { message, history, scenario, character } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
     
@@ -84,6 +91,7 @@ export async function POST(request: Request) {
     );
   }
 }
+
 export async function GET() {
   const apiKey = process.env.GEMINI_API_KEY;
   const isConfigured = !!apiKey && apiKey !== "YOUR_GEMINI_API_KEY_HERE" && apiKey.trim() !== "";

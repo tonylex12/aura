@@ -43,3 +43,6 @@ next-env.d.ts
 # SQLite local databases
 /prisma/*.db
 /prisma/*.db-journal
+
+# Database seed script
+/prisma/seed.js

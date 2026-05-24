@@ -2,7 +2,7 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 
-# Instalar dependencias esenciales del sistema para la compilación de Prisma y SQLite
+# Instalar dependencias esenciales del sistema para la compilación de Prisma y PostgreSQL
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Copiar archivos de dependencias
@@ -28,16 +28,13 @@ RUN npm run build
 FROM node:20-slim AS runner
 WORKDIR /app
 
-# Instalar openssl en la imagen final de producción, ya que Prisma lo requiere
+# Instalar openssl en la imagen final de producción, ya que Prisma lo requiere para PostgreSQL
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Definir variables de entorno para producción
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-
-# Crear la carpeta de datos para montar el volumen persistente de SQLite
-RUN mkdir -p /app/data
 
 # Copiar archivos compilados y estáticos del build standalone
 COPY --from=builder /app/.next/standalone ./
@@ -54,9 +51,6 @@ RUN npm install prisma@6.19.3
 
 # Exponer el puerto de red de Next.js
 EXPOSE 3000
-
-# Apuntar la base de datos de producción a la ruta física del volumen persistente
-ENV DATABASE_URL="file:/app/data/prod.db"
 
 # Utilizar el script de entrada para ejecutar migraciones/seeds en el arranque
 ENTRYPOINT ["./entrypoint.sh"]
