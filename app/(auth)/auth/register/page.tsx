@@ -2,229 +2,78 @@
 
 import React, { useState } from "react";
 import { useSignUp } from "@clerk/nextjs/legacy";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import AuthInput from "@/components/ui/AuthInput";
 import { toast } from "sonner";
 
 export default function RegisterPage() {
-  const { isLoaded, signUp, setActive } = useSignUp();
-  const router = useRouter();
+  const { isLoaded, signUp } = useSignUp();
+  const [loading, setLoading] = useState(false);
 
-  // Registration form states
-  const [firstName, setFirstName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-
-  // Verification OTP states
-  const [pendingVerification, setPendingVerification] = useState<boolean>(false);
-  const [code, setCode] = useState<string>("");
-
-  // Step 1: Submit details to Clerk and send verification email code
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGoogleRegister = async () => {
     if (!isLoaded) return;
-
     setLoading(true);
-    setError("");
 
     try {
-      await signUp.create({
-        emailAddress: email,
-        password,
-        firstName,
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/auth/sso-callback",
+        redirectUrlComplete: "/dashboard",
       });
-
-      // Prepare email verification strategy
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-      setPendingVerification(true);
-      toast.success("Código de verificación enviado a tu correo.");
     } catch (err: any) {
-      console.warn("Error al registrarse en Clerk:", err);
-      const errorMsg = err.errors?.[0]?.message || "No se pudo crear la cuenta. Intenta con otra dirección.";
-      setError(errorMsg);
-      toast.error(errorMsg);
-    } finally {
+      console.warn("Error al registrarse con Google SSO:", err);
+      toast.error("Ocurrió un problema al redirigir a Google.");
       setLoading(false);
     }
   };
 
-  // Step 2: Verify the OTP code and active session
-  const handleVerifySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isLoaded) return;
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code,
-      });
-
-      if (completeSignUp.status === "complete") {
-        await setActive({ session: completeSignUp.createdSessionId });
-        toast.success("¡Registro exitoso! Bienvenido a Aura.");
-        router.push("/dashboard");
-      } else {
-        console.warn("Clerk completeSignUp status:", completeSignUp);
-        setError("Falta completar algún requerimiento en tu cuenta.");
-      }
-    } catch (err: any) {
-      console.warn("Falla en verificación OTP de Clerk:", err);
-      const errorMsg = err.errors?.[0]?.message || "Código incorrecto. Verifica e intenta de nuevo.";
-      setError(errorMsg);
-      toast.error(errorMsg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Render Step 2: Verification Code input form
-  if (pendingVerification) {
-    return (
-      <form onSubmit={handleVerifySubmit} className="flex flex-col gap-5 w-full">
-        <div className="flex flex-col gap-1.5 select-none">
-          <h2 className="text-xl font-bold text-text-primary tracking-tight">
-            Verifica tu Correo
-          </h2>
-          <p className="text-[0.75rem] text-text-muted font-medium">
-            Ingresa el código OTP de 6 dígitos enviado a <strong className="text-text-secondary">{email}</strong>
-          </p>
-        </div>
-
-        {error && (
-          <div className="p-3 bg-danger-color/10 border border-danger-color/20 text-danger-color text-xs rounded-xl font-medium animate-shake">
-            ❌ {error}
-          </div>
-        )}
-
-        {/* Verification Code Input */}
-        <AuthInput
-          label="Código de Verificación"
-          type="text"
-          placeholder="123456"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          icon="fa-key"
-          required
-        />
-
-        {/* Submit Verification Button */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full mt-2 py-3 bg-accent-cyan hover:bg-accent-cyan/80 text-black text-sm font-bold rounded-xl cursor-pointer shadow-[0_4px_15px_rgba(6,182,212,0.3)] hover:shadow-[0_4px_25px_rgba(6,182,212,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
-        >
-          {loading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-t-transparent border-black rounded-full animate-spin"></div>
-              <span>Verificando...</span>
-            </>
-          ) : (
-            <>
-              <i className="fa-solid fa-circle-check"></i>
-              <span>Confirmar Registro</span>
-            </>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setPendingVerification(false)}
-          className="text-xs text-text-muted hover:text-text-primary text-center font-bold transition-all underline cursor-pointer"
-        >
-          Regresar a editar datos
-        </button>
-      </form>
-    );
-  }
-
-  // Render Step 1: General registration form
   return (
-    <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-5 w-full">
-      <div className="flex flex-col gap-1.5 select-none">
-        <h2 className="text-xl font-bold text-text-primary tracking-tight">
-          Crear Cuenta
+    <div className="flex flex-col gap-6 w-full items-center select-none text-center">
+      {/* Header */}
+      <div className="flex flex-col gap-2 animate-fadeIn">
+        <h2 className="text-2xl font-bold text-text-primary tracking-tight font-display">
+          Crea tu Cuenta Gratis
         </h2>
-        <p className="text-[0.75rem] text-text-muted font-medium">
-          Regístrate gratis y comienza a mejorar tu inglés hoy
+        <p className="text-xs text-text-secondary max-w-[280px] mx-auto leading-relaxed">
+          Únete a Aura hoy mismo y obtén acceso inmediato al tutor de inteligencia artificial más potente.
         </p>
       </div>
 
-      {error && (
-        <div className="p-3 bg-danger-color/10 border border-danger-color/20 text-danger-color text-xs rounded-xl font-medium animate-shake">
-          ❌ {error}
-        </div>
-      )}
-
-      {/* First Name Input */}
-      <AuthInput
-        label="Nombre de pila"
-        type="text"
-        placeholder="Juan"
-        value={firstName}
-        onChange={(e) => setFirstName(e.target.value)}
-        icon="fa-user"
-        required
-      />
-
-      {/* Email Input */}
-      <AuthInput
-        label="Correo Electrónico"
-        type="email"
-        placeholder="tu-correo@ejemplo.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        icon="fa-envelope"
-        required
-      />
-
-      {/* Password Input */}
-      <AuthInput
-        label="Contraseña"
-        type="password"
-        placeholder="Mínimo 8 caracteres"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        icon="fa-lock"
-        required
-      />
-
-      {/* Placeholder for Clerk Bot Protection CAPTCHA widget */}
-      <div id="clerk-captcha" data-cl-theme="dark" />
-
-      {/* Submit Details Button */}
+      {/* Google Button */}
       <button
-        type="submit"
+        onClick={handleGoogleRegister}
         disabled={loading}
-        className="w-full mt-2 py-3 bg-primary-color hover:bg-primary-hover text-white text-sm font-bold rounded-xl cursor-pointer shadow-[0_4px_15px_rgba(99,102,241,0.3)] hover:shadow-[0_4px_25px_rgba(99,102,241,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+        className="w-full mt-2 py-3.5 px-4 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white text-sm font-semibold rounded-xl cursor-pointer shadow-lg hover:shadow-[0_0_25px_rgba(99,102,241,0.15)] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:pointer-events-none group"
       >
         {loading ? (
-          <>
-            <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
-            <span>Creando cuenta...</span>
-          </>
+          <span className="w-5 h-5 rounded-full border-2 border-t-transparent border-white animate-spin" />
         ) : (
           <>
-            <i className="fa-solid fa-user-plus"></i>
-            <span>Comenzar Registro</span>
+            <svg className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            <span>Registrarse con Google</span>
           </>
         )}
       </button>
 
-      {/* Login Link */}
-      <p className="text-xs text-text-muted text-center mt-2 select-none font-medium">
-        ¿Ya tienes una cuenta?{" "}
-        <Link 
-          href="/auth/login" 
-          className="text-accent-cyan hover:text-accent-cyan/80 hover:underline font-bold transition-all ml-1"
-        >
-          Inicia sesión
-        </Link>
-      </p>
-    </form>
+      {/* Disclaimers & Sign In Redirect */}
+      <div className="flex flex-col gap-4 mt-2 animate-fadeIn [animation-delay:0.1s]">
+        <p className="text-xs text-text-muted">
+          ¿Ya tienes una cuenta creada?{" "}
+          <Link
+            href="/auth/login"
+            className="text-accent-cyan hover:text-accent-cyan/80 hover:underline font-bold transition-all ml-1"
+          >
+            Inicia sesión
+          </Link>
+        </p>
+        <span className="text-[0.65rem] text-text-muted/60 max-w-[260px] leading-relaxed select-none">
+          Al registrarte, declaras que tienes al menos 13 años de edad. Toda tu información se procesa de forma segura a través de los servidores OAuth certificados de Google y Clerk.
+        </span>
+      </div>
+    </div>
   );
 }
