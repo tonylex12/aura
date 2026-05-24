@@ -1,0 +1,49 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Vocabulary {
+  id          String   @id @default(uuid())
+  word        String   @unique
+  translation String
+  example     String
+  category    String   // 'idioms', 'phrasal', 'business', 'travel', 'core'
+  mastered    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  sender      String   // "aura" | "user"
+  text        String
+  translation String?
+  isVoice     Boolean  @default(false)
+  scenario    String   // "casual" | "restaurant" | "interview"
+  createdAt   DateTime @default(now())
+}
+
+model QuizRecord {
+  id          String   @id @default(uuid())
+  score       Int      // Number of correct answers
+  total       Int      // Total number of questions
+  category    String   // 'all', 'idioms', 'phrasal', 'business', 'travel', 'core'
+  createdAt   DateTime @default(now())
+}
+
+model GrammarLesson {
+  id           String   @id @default(uuid())
+  title        String   @unique
+  category     String   // 'tenses', 'quantifiers', 'rules', 'conditionals'
+  summary      String   // Short overview sentence
+  formula      String?  // Formula block structure (e.g. S + V)
+  content      String   // Detailed text explanation
+  examplesJson String   // Stringified JSON list of interactive audio examples
+  order        Int      // Sequential sorting index for pagination
+  completed    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
