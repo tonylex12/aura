@@ -47,7 +47,7 @@ export default function LoginPage() {
         setError(`El flujo no se pudo completar. Estado de Clerk: ${result.status}`);
       }
     } catch (err: any) {
-      console.error("Falla al iniciar sesión en Clerk:", err);
+      console.warn("Falla al iniciar sesión en Clerk:", err);
       const errorMsg = err.errors?.[0]?.message || "Credenciales inválidas. Por favor intenta de nuevo.";
       setError(errorMsg);
       toast.error(errorMsg);

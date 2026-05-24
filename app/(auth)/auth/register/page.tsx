@@ -42,7 +42,7 @@ export default function RegisterPage() {
       setPendingVerification(true);
       toast.success("Código de verificación enviado a tu correo.");
     } catch (err: any) {
-      console.error("Error al registrarse en Clerk:", err);
+      console.warn("Error al registrarse en Clerk:", err);
       const errorMsg = err.errors?.[0]?.message || "No se pudo crear la cuenta. Intenta con otra dirección.";
       setError(errorMsg);
       toast.error(errorMsg);
@@ -73,7 +73,7 @@ export default function RegisterPage() {
         setError("Falta completar algún requerimiento en tu cuenta.");
       }
     } catch (err: any) {
-      console.error("Falla en verificación OTP de Clerk:", err);
+      console.warn("Falla en verificación OTP de Clerk:", err);
       const errorMsg = err.errors?.[0]?.message || "Código incorrecto. Verifica e intenta de nuevo.";
       setError(errorMsg);
       toast.error(errorMsg);

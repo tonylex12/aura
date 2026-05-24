@@ -128,10 +128,10 @@ export default function ChatSimulator({
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-5 h-[calc(100vh-180px)] min-h-[500px]">
+    <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-5 h-auto xl:h-[calc(100vh-180px)] min-h-[500px]">
       
       {/* Main Chat Simulator Section */}
-      <div className="flex flex-col h-full overflow-hidden relative glass-panel">
+      <div className="flex flex-col h-[500px] sm:h-[600px] xl:h-full overflow-hidden relative glass-panel">
         
         {/* Scenario selection header bar */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-white/6">
@@ -293,7 +293,7 @@ export default function ChatSimulator({
       </div>
 
       {/* Sidebar Grammar Assistant Pane */}
-      <div className="p-6 glass-panel flex flex-col h-full overflow-hidden">
+      <div className="p-6 glass-panel flex flex-col h-[400px] xl:h-full overflow-hidden">
         <h4 className="text-lg font-bold flex items-center gap-2 border-b border-white/5 pb-3 mb-5 text-text-primary">
           <i className="fa-solid fa-wand-magic-sparkles text-primary-color animate-pulse"></i> Aura Assistant
         </h4>

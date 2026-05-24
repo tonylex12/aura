@@ -180,10 +180,10 @@ export default function PronunciationSandbox({ onAccuracyUpdate, speakText }: Pr
   const strokeOffset = score !== null ? 283 - (283 * score) / 100 : 283;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5 h-[calc(100vh-180px)] min-h-[500px]">
+    <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5 h-auto lg:h-[calc(100vh-180px)] min-h-[500px]">
       
       {/* Sidebar Phrase List Pane */}
-      <div className="p-6 glass-panel flex flex-col h-full overflow-hidden">
+      <div className="p-6 glass-panel flex flex-col h-[350px] lg:h-full overflow-hidden">
         <h4 className="text-lg font-bold mb-4 text-text-primary">Selecciona una Frase</h4>
         
         {/* Category switcher tabs */}
@@ -224,7 +224,7 @@ export default function PronunciationSandbox({ onAccuracyUpdate, speakText }: Pr
       </div>
 
       {/* Main Pronunciation Evaluator Sandbox board */}
-      <div className="p-6 lg:p-10 glass-panel flex flex-col justify-between h-full overflow-hidden gap-6">
+      <div className="p-6 lg:p-10 glass-panel flex flex-col justify-between h-[500px] sm:h-[600px] lg:h-full overflow-hidden gap-6">
         
         {/* Target model card */}
         <div className="bg-white/2 border border-white/4 rounded-2xl p-6 lg:p-8 relative">

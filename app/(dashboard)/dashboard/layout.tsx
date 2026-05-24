@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import SettingsDialog from "@/components/SettingsDialog";
 import { Toaster } from "@/components/ui/sonner";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 export default function DashboardLayout({
   children,
@@ -83,6 +83,10 @@ export default function DashboardLayout({
           className="p-0 bg-transparent border-none w-[280px] h-full"
           showCloseButton={false}
         >
+          <SheetTitle className="sr-only">Menú de Navegación</SheetTitle>
+          <SheetDescription className="sr-only">
+            Panel de control para navegar a través de la aplicación de aprendizaje de inglés Aura.
+          </SheetDescription>
           <Sidebar
             userRole={userRole}
             onOpenSettings={() => setSettingsOpen(true)}
