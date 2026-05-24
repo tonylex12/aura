@@ -35,6 +35,7 @@ export default function GrammarPanel({ speakText }: GrammarPanelProps) {
   const [loading, setLoading] = useState<boolean>(true);
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [showMobileIndex, setShowMobileIndex] = useState<boolean>(false);
 
   useEffect(() => {
     fetchLessons();
@@ -156,8 +157,8 @@ export default function GrammarPanel({ speakText }: GrammarPanelProps) {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 min-h-[75vh]">
-      {/* LEFT COLUMN: Sidebar Index Table of Contents */}
-      <div className="w-full lg:w-[280px] shrink-0 flex flex-col gap-4">
+      {/* LEFT COLUMN: Sidebar Index Table of Contents (Desktop only) */}
+      <div className="hidden lg:flex lg:w-[280px] shrink-0 flex-col gap-4">
         {/* Progress Tracker Card */}
         <div className="glass-panel p-4 flex flex-col gap-3 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-accent-cyan/5 rounded-full filter blur-[15px] -z-10"></div>
@@ -241,25 +242,140 @@ export default function GrammarPanel({ speakText }: GrammarPanelProps) {
         </div>
       </div>
 
+      {/* MOBILE DRAWER INDEX: Visible below lg when showMobileIndex is true */}
+      {showMobileIndex && (
+        <div className="fixed inset-0 z-[200] flex lg:hidden bg-slate-950/60 backdrop-blur-xs transition-all duration-300">
+          {/* Slide-over Panel */}
+          <div className="w-[85%] max-w-[320px] bg-slate-900 border-r border-white/10 h-full p-5 flex flex-col gap-4 shadow-2xl relative animate-in slide-in-from-left duration-300">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-white/5">
+              <span className="text-sm font-bold text-text-primary flex items-center gap-2">
+                <i className="fa-solid fa-book-open text-accent-cyan animate-pulse"></i>
+                Temas Gramaticales
+              </span>
+              <button
+                onClick={() => setShowMobileIndex(false)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-text-primary cursor-pointer transition-all active:scale-90"
+              >
+                <i className="fa-solid fa-xmark text-sm"></i>
+              </button>
+            </div>
+
+            {/* Mobile Progress Tracker */}
+            <div className="p-3 bg-white/[0.02] border border-white/5 rounded-xl flex flex-col gap-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-text-muted font-semibold">Leído: {completedLessons} de {totalLessons}</span>
+                <span className="font-bold text-accent-cyan">{progressPercent}%</span>
+              </div>
+              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary-color to-accent-cyan"
+                  style={{ width: `${progressPercent}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative">
+              <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-xs"></i>
+              <input
+                type="text"
+                placeholder="Buscar tema..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-text-primary focus:outline-none focus:border-accent-cyan transition-all"
+              />
+            </div>
+
+            {/* Index Items List (Scrollable) */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-4">
+              {Object.entries(CATEGORY_NAMES).map(([catKey, catName]) => {
+                const catLessons = groupedLessons[catKey] || [];
+                const filteredCatLessons = catLessons.filter((l) =>
+                  filteredLessons.some((fl) => fl.id === l.id)
+                );
+
+                if (filteredCatLessons.length === 0) return null;
+
+                return (
+                  <div key={catKey} className="space-y-1.5">
+                    <h4 className="text-[0.65rem] text-text-muted font-black tracking-widest uppercase pl-1">
+                      {catName}
+                    </h4>
+                    <div className="space-y-1">
+                      {filteredCatLessons.map((l) => {
+                        const isActive = currentLesson?.id === l.id;
+                        const cleanTitle = l.title.replace(/^\d+\.\s*/, "");
+                        return (
+                          <button
+                            key={l.id}
+                            onClick={() => {
+                              selectLessonById(l.id);
+                              setShowMobileIndex(false); // Auto-close drawer on mobile selection
+                            }}
+                            className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center justify-between gap-2.5 transition-all text-xs font-semibold cursor-pointer border ${
+                              isActive
+                                ? "bg-primary-color-glow text-accent-cyan border-accent-cyan/30 shadow-[0_0_12px_rgba(6,182,212,0.1)]"
+                                : "bg-white/[0.01] hover:bg-white/5 text-text-secondary border-transparent"
+                            }`}
+                          >
+                            <span className="truncate flex-1">{cleanTitle}</span>
+                            {l.completed ? (
+                              <i className="fa-solid fa-circle-check text-success-color text-[0.8rem] shrink-0"></i>
+                            ) : (
+                              <i className="fa-regular fa-circle text-white/20 text-[0.8rem] shrink-0"></i>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {filteredLessons.length === 0 && (
+                <p className="text-xs text-text-muted text-center py-6">
+                  No se encontraron lecciones.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Backdrop Click Dismiss */}
+          <div className="flex-1" onClick={() => setShowMobileIndex(false)}></div>
+        </div>
+      )}
+
       {/* RIGHT COLUMN: The Digital Book Page View */}
       <div className="flex-1 flex flex-col gap-5">
         {currentLesson ? (
           <>
             {/* The Main Lesson Card */}
-            <div className="glass-panel p-6 lg:p-8 flex-1 flex flex-col gap-6 relative overflow-hidden">
+            <div className="glass-panel p-4 sm:p-6 lg:p-8 flex-1 flex flex-col gap-5 sm:gap-6 relative overflow-hidden">
               {/* Soft visual gradient overlay inside the book card */}
               <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-primary-color/5 to-accent-cyan/0 rounded-full filter blur-[40px] -z-10 pointer-events-none"></div>
 
               {/* Header Info */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/5">
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold tracking-wider uppercase bg-primary-color/10 text-primary-color border border-primary-color/20">
-                      {CATEGORY_NAMES[currentLesson.category]}
-                    </span>
-                    <span className="text-xs text-text-muted">Lección {currentLesson.order} de {totalLessons}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
+                <div className="space-y-1.5 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold tracking-wider uppercase bg-primary-color/10 text-primary-color border border-primary-color/20">
+                        {CATEGORY_NAMES[currentLesson.category]}
+                      </span>
+                      <span className="text-xs text-text-muted">Lección {currentLesson.order} de {totalLessons}</span>
+                    </div>
+
+                    {/* Mobile Index Toggle Button */}
+                    <button
+                      onClick={() => setShowMobileIndex(true)}
+                      className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-accent-cyan cursor-pointer transition-all active:scale-95 shrink-0"
+                    >
+                      <i className="fa-solid fa-list-ul"></i>
+                      <span>Índice</span>
+                    </button>
                   </div>
-                  <h2 className="text-2xl font-black text-text-primary tracking-tight">
+                  <h2 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
                     {currentLesson.title.replace(/^\d+\.\s*/, "")}
                   </h2>
                 </div>
@@ -300,7 +416,7 @@ export default function GrammarPanel({ speakText }: GrammarPanelProps) {
                   <h4 className="text-[0.7rem] text-text-muted font-black tracking-widest uppercase pl-1">
                     Estructura de Referencia
                   </h4>
-                  <div className="p-4 bg-slate-950/40 border border-white/5 rounded-xl flex items-center justify-between gap-4 font-mono text-sm overflow-x-auto custom-scrollbar">
+                  <div className="p-4 bg-slate-950/40 border border-white/5 rounded-xl flex items-center justify-between gap-4 font-mono text-xs sm:text-sm overflow-x-auto custom-scrollbar">
                     <span className="text-accent-cyan font-semibold whitespace-nowrap">
                       {currentLesson.formula}
                     </span>
@@ -329,11 +445,11 @@ export default function GrammarPanel({ speakText }: GrammarPanelProps) {
                     {parsedExamples.map((ex, i) => (
                       <div
                         key={i}
-                        className="group flex flex-col md:flex-row md:items-start justify-between gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-300"
+                        className="group flex flex-col gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] transition-all duration-300"
                       >
                         <div className="space-y-1.5 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-text-primary group-hover:text-accent-cyan transition-colors">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-sm font-bold text-text-primary group-hover:text-accent-cyan transition-colors leading-snug">
                               {ex.en}
                             </span>
                             <button
