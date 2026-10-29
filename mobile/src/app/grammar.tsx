@@ -4,8 +4,70 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Card, Header, PrimaryButton, Screen } from '@/components/ui';
 import { colors, type } from '@/constants/theme';
+import { getLessonExercises, type LessonExercise } from '@/data/grammar-exercises';
 import { grammarReference, learningStages } from '@/data/grammar-reference';
 import { useProgress } from '@/state/progress';
+
+function LessonPractice({ lessonId, completed, onComplete }: { lessonId: string; completed: boolean; onComplete: () => void }) {
+  const lesson = grammarReference.find((item) => item.id === lessonId)!;
+  const exercises = getLessonExercises(lesson);
+  const [revealed, setRevealed] = useState<string[]>([]);
+  const [choices, setChoices] = useState<Record<string, number>>({});
+  const resolved = exercises.filter((exercise) => exercise.kind === 'choice' ? choices[exercise.id] !== undefined : revealed.includes(exercise.id)).length;
+  const ready = resolved === exercises.length;
+
+  const reveal = (id: string) => {
+    setRevealed((current) => current.includes(id) ? current : [...current, id]);
+    void Haptics.selectionAsync();
+  };
+
+  return (
+    <View>
+      <View style={styles.practiceHeader}>
+        <View>
+          <Text style={styles.practiceLabel}>7 · PRÁCTICA GUIADA</Text>
+          <Text style={styles.practiceTitle}>Entrena antes de avanzar</Text>
+        </View>
+        <Text style={styles.practiceCount}>{resolved}/{exercises.length}</Text>
+      </View>
+      <Text style={styles.practiceIntro}>Resuelve cada actividad mentalmente o por escrito. Después compara tu respuesta con la explicación.</Text>
+      {exercises.map((exercise, index) => (
+        <ExerciseCard
+          key={exercise.id}
+          exercise={exercise}
+          index={index}
+          selected={choices[exercise.id]}
+          revealed={revealed.includes(exercise.id)}
+          onChoose={(option) => {
+            if (choices[exercise.id] !== undefined) return;
+            setChoices((current) => ({ ...current, [exercise.id]: option }));
+            void Haptics.notificationAsync(option === exercise.correctOption ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error);
+          }}
+          onReveal={() => reveal(exercise.id)}
+        />
+      ))}
+      {!ready && <Text style={styles.completeHint}>Revisa las {exercises.length - resolved} actividades restantes para completar la lección.</Text>}
+      <PrimaryButton disabled={completed || !ready} title={completed ? 'Lección completada ✓' : ready ? 'Completar · +20 XP' : `Completa la práctica · ${resolved}/${exercises.length}`} onPress={onComplete} />
+    </View>
+  );
+}
+
+function ExerciseCard({ exercise, index, selected, revealed, onChoose, onReveal }: { exercise: LessonExercise; index: number; selected?: number; revealed: boolean; onChoose: (option: number) => void; onReveal: () => void }) {
+  const answered = exercise.kind === 'choice' ? selected !== undefined : revealed;
+  return (
+    <View style={styles.exerciseCard}>
+      <View style={styles.exerciseTop}><Text style={styles.exerciseNumber}>{index + 1}</Text><Text style={styles.exerciseKind}>{exercise.label.toUpperCase()}</Text></View>
+      <Text style={styles.exercisePrompt}>{exercise.prompt}</Text>
+      {exercise.options?.map((option, optionIndex) => {
+        const correct = selected !== undefined && optionIndex === exercise.correctOption;
+        const wrong = selected === optionIndex && optionIndex !== exercise.correctOption;
+        return <Pressable key={option} onPress={() => onChoose(optionIndex)} style={[styles.exerciseOption, correct && styles.exerciseCorrect, wrong && styles.exerciseWrong]}><Text style={styles.exerciseLetter}>{String.fromCharCode(65 + optionIndex)}</Text><Text style={styles.exerciseOptionText}>{option}</Text>{correct && <Text style={styles.answerMark}>✓</Text>}{wrong && <Text style={styles.answerMark}>×</Text>}</Pressable>;
+      })}
+      {exercise.kind !== 'choice' && !revealed && <Pressable onPress={onReveal} style={styles.revealButton}><Text style={styles.revealText}>Ver respuesta y explicación</Text></Pressable>}
+      {answered && <View style={styles.solution}><Text style={styles.solutionLabel}>RESPUESTA / GUÍA</Text><Text style={styles.solutionAnswer}>{exercise.answer}</Text><Text style={styles.solutionExplanation}>{exercise.explanation}</Text></View>}
+    </View>
+  );
+}
 
 export default function GrammarScreen() {
   const [selected, setSelected] = useState<string | null>(null);
@@ -50,15 +112,10 @@ export default function GrammarScreen() {
             <Text style={styles.errorText}>{error}</Text>
           </View>
         ))}
-        <View style={styles.practice}>
-          <Text style={styles.practiceLabel}>7 · APLICACIÓN</Text>
-          <Text style={styles.practiceTitle}>Ahora te toca a ti</Text>
-          <Text style={styles.practiceText}>{active.practice ?? 'Escribe tres ejemplos propios y transforma uno en afirmación, negación y pregunta.'}</Text>
-        </View>
-        <PrimaryButton
-          disabled={lessons.includes(active.id)}
-          title={lessons.includes(active.id) ? 'Lección completada ✓' : 'Completar · +20 XP'}
-          onPress={() => {
+        <LessonPractice
+          lessonId={active.id}
+          completed={lessons.includes(active.id)}
+          onComplete={() => {
             completeLesson(active.id);
             void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }}
@@ -139,5 +196,6 @@ const styles = StyleSheet.create({
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginBottom: 15 }, filter: { paddingHorizontal: 13, paddingVertical: 8, borderRadius: 99, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line }, filterActive: { backgroundColor: colors.ink, borderColor: colors.ink }, filterText: { fontSize: 11, fontWeight: '800', color: colors.muted }, filterTextActive: { color: 'white' }, catalogMeta: { fontSize: 9, fontWeight: '900', letterSpacing: 1.1, color: '#9A948A', marginBottom: 10 },
   lesson: { backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, borderRadius: 20, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 13, marginBottom: 11 }, lessonIcon: { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }, lessonIconText: { fontWeight: '900', color: colors.ink, fontSize: 12 }, lessonOrder: { fontWeight: '900', color: colors.ink, fontSize: 13 }, lessonTop: { flexDirection: 'row', alignItems: 'center', gap: 7 }, lessonTitle: { color: colors.ink, fontWeight: '800', fontSize: 15 }, lessonSummary: { color: colors.muted, fontSize: 11, marginTop: 4 }, done: { color: colors.success, fontWeight: '900' }, chevron: { fontSize: 26, color: colors.muted },
   ruleCard: { backgroundColor: '#292922', borderWidth: 0, marginBottom: 23 }, label: { fontSize: 9, fontWeight: '800', letterSpacing: 1.4, color: colors.yellow }, rule: { color: 'white', fontFamily: type.rounded, fontSize: 20, lineHeight: 29, fontWeight: '700', marginTop: 11 }, section: { fontFamily: type.rounded, color: colors.ink, fontWeight: '900', fontSize: 20, marginTop: 22, marginBottom: 11 }, bodyText: { backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, borderRadius: 16, padding: 15, color: colors.ink, fontSize: 13, lineHeight: 21 }, example: { backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, borderRadius: 16, padding: 13, flexDirection: 'row', alignItems: 'center', gap: 11, marginBottom: 8 }, number: { width: 29, height: 29, borderRadius: 10, backgroundColor: colors.coralSoft, textAlign: 'center', textAlignVertical: 'center', color: colors.coral, fontWeight: '900' }, exampleText: { color: colors.ink, fontWeight: '600', flex: 1 },
-  tip: { backgroundColor: '#FFF1C8', borderRadius: 18, padding: 15, flexDirection: 'row', gap: 12, marginVertical: 18 }, tipIcon: { fontSize: 20, color: '#A88012' }, tipTitle: { fontSize: 9, fontWeight: '900', letterSpacing: 1.1, color: '#9B7716' }, tipText: { fontSize: 12, lineHeight: 18, color: '#594C29', marginTop: 4 }, errorRow: { backgroundColor: '#FAE5DF', borderRadius: 14, padding: 12, flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 8 }, errorMark: { width: 26, height: 26, borderRadius: 9, backgroundColor: colors.coral, textAlign: 'center', textAlignVertical: 'center', color: 'white', fontWeight: '900' }, errorText: { color: '#704D45', fontSize: 12, lineHeight: 18, flex: 1 }, practice: { backgroundColor: colors.lavender, borderRadius: 20, padding: 17, marginTop: 22, marginBottom: 18 }, practiceLabel: { fontSize: 9, fontWeight: '900', letterSpacing: 1.3, color: '#6C6198' }, practiceTitle: { fontFamily: type.rounded, fontSize: 19, fontWeight: '900', color: colors.ink, marginTop: 5 }, practiceText: { fontSize: 12, lineHeight: 19, color: '#5B5669', marginTop: 6 },
+  tip: { backgroundColor: '#FFF1C8', borderRadius: 18, padding: 15, flexDirection: 'row', gap: 12, marginVertical: 18 }, tipIcon: { fontSize: 20, color: '#A88012' }, tipTitle: { fontSize: 9, fontWeight: '900', letterSpacing: 1.1, color: '#9B7716' }, tipText: { fontSize: 12, lineHeight: 18, color: '#594C29', marginTop: 4 }, errorRow: { backgroundColor: '#FAE5DF', borderRadius: 14, padding: 12, flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 8 }, errorMark: { width: 26, height: 26, borderRadius: 9, backgroundColor: colors.coral, textAlign: 'center', textAlignVertical: 'center', color: 'white', fontWeight: '900' }, errorText: { color: '#704D45', fontSize: 12, lineHeight: 18, flex: 1 },
+  practiceHeader: { backgroundColor: colors.lavender, borderRadius: 20, padding: 17, marginTop: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, practiceLabel: { fontSize: 9, fontWeight: '900', letterSpacing: 1.3, color: '#6C6198' }, practiceTitle: { fontFamily: type.rounded, fontSize: 19, fontWeight: '900', color: colors.ink, marginTop: 5 }, practiceCount: { backgroundColor: 'white', color: '#6C6198', fontWeight: '900', paddingHorizontal: 11, paddingVertical: 7, borderRadius: 99 }, practiceIntro: { color: colors.muted, fontSize: 12, lineHeight: 19, marginVertical: 13 }, exerciseCard: { backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, borderRadius: 20, padding: 15, marginBottom: 11 }, exerciseTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 11 }, exerciseNumber: { width: 25, height: 25, borderRadius: 8, textAlign: 'center', textAlignVertical: 'center', backgroundColor: colors.ink, color: 'white', fontWeight: '900', fontSize: 11 }, exerciseKind: { fontSize: 9, letterSpacing: 1.2, fontWeight: '900', color: colors.coral }, exercisePrompt: { fontFamily: type.rounded, color: colors.ink, fontSize: 16, lineHeight: 23, fontWeight: '800', marginBottom: 12 }, exerciseOption: { minHeight: 47, borderRadius: 13, backgroundColor: '#F4F0E9', padding: 9, flexDirection: 'row', alignItems: 'center', gap: 9, marginTop: 7, borderWidth: 1, borderColor: 'transparent' }, exerciseCorrect: { backgroundColor: colors.mint, borderColor: colors.success }, exerciseWrong: { backgroundColor: colors.coralSoft, borderColor: colors.danger }, exerciseLetter: { width: 28, height: 28, borderRadius: 9, backgroundColor: 'white', textAlign: 'center', textAlignVertical: 'center', fontWeight: '900', color: colors.ink }, exerciseOptionText: { flex: 1, color: colors.ink, fontSize: 12, fontWeight: '700' }, answerMark: { fontSize: 18, fontWeight: '900', color: colors.ink }, revealButton: { borderWidth: 1, borderColor: colors.ink, borderRadius: 13, padding: 12, alignItems: 'center' }, revealText: { color: colors.ink, fontWeight: '900', fontSize: 11 }, solution: { backgroundColor: '#F0ECE5', borderRadius: 14, padding: 12, marginTop: 12 }, solutionLabel: { fontSize: 8, fontWeight: '900', letterSpacing: 1.2, color: colors.success }, solutionAnswer: { color: colors.ink, fontWeight: '800', fontSize: 12, lineHeight: 18, marginTop: 6 }, solutionExplanation: { color: colors.muted, fontSize: 11, lineHeight: 17, marginTop: 5 }, completeHint: { textAlign: 'center', color: colors.muted, fontSize: 11, marginVertical: 10 },
 });
